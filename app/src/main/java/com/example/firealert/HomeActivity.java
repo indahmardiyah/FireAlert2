@@ -1,6 +1,10 @@
 package com.example.firealert;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -9,6 +13,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import android.content.pm.PackageManager;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -25,6 +32,8 @@ public class HomeActivity extends AppCompatActivity {
     private TextView tvDateTime, tvFlame, tvLpg, tvSuhu;
     private Handler handler = new Handler();
     private Runnable updateTimeRunnable;
+
+    private static final String CHANNEL_ID = "my_channel_id";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +86,7 @@ public class HomeActivity extends AppCompatActivity {
 
     // Fungsi untuk mengambil data sensor dari Firebase
     private void fetchSensorData() {
-        DatabaseReference sensorsRef = FirebaseDatabase.getInstance().getReference("sensors");
+        DatabaseReference sensorsRef = FirebaseDatabase.getInstance().getReference("sensors").child("-OEh1BMjMp-WvVPltf7r");
 
         sensorsRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -88,6 +97,19 @@ public class HomeActivity extends AppCompatActivity {
                     double lpg = dataSnapshot.child("lpg").getValue(Double.class);
                     double suhu = dataSnapshot.child("suhu").getValue(Double.class);
                     String timestamp = dataSnapshot.child("timestamp").getValue(String.class);
+
+
+
+                    if(flame == 1){
+
+                        showNotification("Terjadi Kebakaran!", "Api Terdeteksi");
+                    }else if(lpg >= 50.0){
+
+                        showNotification("Terjadi Kebakaran!", "Kadar Gas Melebihi Batas");
+                    }else if(suhu >= 42.0){
+
+                        showNotification("Terjadi Kebakaran!", "Suhu Melebihi Batas");
+                    }
 
                     // Set nilai ke TextView
                     tvFlame.setText("Flame: " + flame);
@@ -104,6 +126,41 @@ public class HomeActivity extends AppCompatActivity {
                 tvSuhu.setText("Suhu: Error");
             }
         });
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "My Channel";
+            String description = "Channel untuk notifikasi sederhana";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            // Daftarkan channel ke sistem
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Handle permission
+            return;
+        }
+
+    }
+
+    private void showNotification(String title, String content) {
+        createNotificationChannel();
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(HomeActivity.this, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_dialog_info) // Icon bawaan Android
+                .setContentTitle(title)
+                .setContentText(content)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Tampilkan notifikasi
+        notificationManager.notify(1, builder.build());
     }
 
     @Override

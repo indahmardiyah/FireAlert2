@@ -33,7 +33,6 @@ public class SensorAdapter extends ArrayAdapter<Sensor> {
             convertView = LayoutInflater.from(context).inflate(R.layout.sensor_item, parent, false);
             viewHolder = new ViewHolder();
             viewHolder.nameTextView = convertView.findViewById(R.id.sensorNameTextView);
-            viewHolder.valueTextView = convertView.findViewById(R.id.sensorValueTextView);
             convertView.setTag(viewHolder); // Menyimpan ViewHolder di tag
         } else {
             viewHolder = (ViewHolder) convertView.getTag(); // Mengambil ViewHolder dari tag
@@ -44,7 +43,6 @@ public class SensorAdapter extends ArrayAdapter<Sensor> {
 
         // Mengatur teks untuk TextView
         viewHolder.nameTextView.setText(currentSensor.getName());
-        viewHolder.valueTextView.setText(currentSensor.getValue());
 
         return convertView;
     }

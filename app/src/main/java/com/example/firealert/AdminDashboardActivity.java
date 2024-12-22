@@ -2,6 +2,7 @@ package com.example.firealert;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 
 public class AdminDashboardActivity extends AppCompatActivity {
 
-    EditText sensorNameEditText, sensorValueEditText;
+    EditText sensorNameEditText;
     Button addSensorButton, deleteSensorButton;
     ListView sensorListView;
 
@@ -38,11 +39,10 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
         // Inisialisasi elemen UI
         sensorNameEditText = findViewById(R.id.etSensorName);
-        sensorValueEditText = findViewById(R.id.etSensorValue);
-        addSensorButton = findViewById(R.id.btnAddSensor);
-        deleteSensorButton = findViewById(R.id.btnDeleteSensor);
-        sensorListView = findViewById(R.id.lvSensorList);
 
+        addSensorButton = findViewById(R.id.btnAddSensor);
+        sensorListView = findViewById(R.id.lvSensorList);
+        deleteSensorButton = findViewById(R.id.btnDeleteSensor);
         // Firebase Database
         database = FirebaseDatabase.getInstance();
         sensorsReference = database.getReference("sensors");
@@ -55,26 +55,23 @@ public class AdminDashboardActivity extends AppCompatActivity {
         // Tombol tambah sensor
         addSensorButton.setOnClickListener(v -> {
             String sensorName = sensorNameEditText.getText().toString().trim();
-            String sensorValue = sensorValueEditText.getText().toString().trim();
 
             if (TextUtils.isEmpty(sensorName)) {
                 sensorNameEditText.setError("Nama sensor tidak boleh kosong");
                 return;
             }
-            if (TextUtils.isEmpty(sensorValue)) {
-                sensorValueEditText.setError("Nilai sensor tidak boleh kosong");
-                return;
-            }
 
             // Menambahkan sensor ke database
             String sensorId = sensorsReference.push().getKey();  // Generate ID unik
-            Sensor sensor = new Sensor(sensorId, sensorName, sensorValue);
+            Sensor sensor = new Sensor(sensorId, sensorName);
             if (sensorId != null) {
                 sensorsReference.child(sensorId).setValue(sensor)
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(AdminDashboardActivity.this, "Sensor berhasil ditambahkan", Toast.LENGTH_SHORT).show();
                             sensorNameEditText.setText("");
-                            sensorValueEditText.setText("");
+                            sensorsReference.child(sensorId).child("lpg").setValue(0.0);
+                            sensorsReference.child(sensorId).child("flame").setValue(0);
+                            sensorsReference.child(sensorId).child("suhu").setValue(0);
                         })
                         .addOnFailureListener(e -> Toast.makeText(AdminDashboardActivity.this, "Gagal menambahkan sensor", Toast.LENGTH_SHORT).show());
             }
@@ -116,6 +113,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 sensorList.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                    Log.d("SNAP", snapshot.toString());
                     Sensor sensor = snapshot.getValue(Sensor.class);
                     if (sensor != null) {
                         sensorList.add(sensor);
