@@ -111,8 +111,14 @@ public class HomeActivity extends AppCompatActivity {
                         showNotification("Terjadi Kebakaran!", "Suhu Melebihi Batas");
                     }
 
+                    if(flame == 1){
+                        tvFlame.setText("Flame: Api Terdeteksi" );
+                    }else{
+                        tvFlame.setText("Flame: Tidak Ada Api" );
+                    }
+
                     // Set nilai ke TextView
-                    tvFlame.setText("Flame: " + flame);
+
                     tvLpg.setText("LPG: " + lpg);
                     tvSuhu.setText("Suhu: " + suhu + " °C");
                 }
