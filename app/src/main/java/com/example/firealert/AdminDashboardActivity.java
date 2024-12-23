@@ -1,11 +1,13 @@
 package com.example.firealert;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -51,6 +53,27 @@ public class AdminDashboardActivity extends AppCompatActivity {
         sensorList = new ArrayList<>();
         sensorAdapter = new SensorAdapter(this, sensorList);
         sensorListView.setAdapter(sensorAdapter);
+
+        ImageView logoutIcon = findViewById(R.id.logoutIcon);
+        logoutIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Pindah ke aktivitas utama (MainActivity)
+                Intent intent = new Intent(AdminDashboardActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish(); // Menutup aktivitas saat ini
+            }
+        });
+
+        Button btnNotificationHistory = findViewById(R.id.btnNotificationHistory);
+        btnNotificationHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Pindah ke aktivitas riwayat notifikasi
+                Intent intent = new Intent(AdminDashboardActivity.this, NotificationHistoryActivity.class);
+                startActivity(intent);
+            }
+        });
 
         // Tombol tambah sensor
         addSensorButton.setOnClickListener(v -> {

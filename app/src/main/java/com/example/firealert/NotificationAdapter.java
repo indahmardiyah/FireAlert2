@@ -30,9 +30,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         NotificationItem item = notificationList.get(position);
         holder.textViewTime.setText(item.getTime());
         holder.textViewStatus.setText(item.getStatus());
-        holder.textViewApi.setText("Api: " + item.getApi());
-        holder.textViewSuhu.setText("Suhu: " + item.getSuhu());
-        holder.textViewAsap.setText("Asap: " + item.getAsap());
+        if(item.getApi() == "1"){
+            holder.textViewApi.setText("Api Terdeteksi" );
+        }else{
+            holder.textViewApi.setText("Tidak Ada Api" );
+        }
+        holder.textViewSuhu.setText("Suhu: " + item.getSuhu()+ " °C");
+        holder.textViewAsap.setText("Gas: " + item.getAsap()+ " %");
     }
 
     @Override

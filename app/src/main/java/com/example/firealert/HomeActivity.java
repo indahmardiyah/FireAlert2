@@ -34,7 +34,7 @@ import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private TextView tvDateTime, tvFlame, tvLpg, tvSuhu;
+    private TextView tvDateTime, tvFlame, tvLpg, tvSuhu, tvStatus;
     private Handler handler = new Handler();
     private Runnable updateTimeRunnable;
 
@@ -61,6 +61,7 @@ public class HomeActivity extends AppCompatActivity {
         tvFlame = findViewById(R.id.tvApiStatus);
         tvLpg = findViewById(R.id.tvGasStatus);
         tvSuhu = findViewById(R.id.tvTemperature);
+        tvStatus = findViewById(R.id.tvStatus);
 
         // Update waktu secara real-time
         updateTimeRunnable = new Runnable() {
@@ -134,7 +135,7 @@ public class HomeActivity extends AppCompatActivity {
 
                         if(lpgAlarm == false){
                             Notifikasi(HomeActivity.this,"Terjadi Kebakaran!", "Kadar Gas Melebihi Batas", "lpg");
-                            writeNotif("Api Terdeteksi", flame, lpg, suhu);
+                            writeNotif("Kadar Gas Melebihi Batas", flame, lpg, suhu);
                         }
                         lpgAlarm = true;
 
@@ -146,7 +147,7 @@ public class HomeActivity extends AppCompatActivity {
                         Log.d("SUHU", "Suhu");
                         if(suhuAlarm == false){
                             Notifikasi(HomeActivity.this, "Terjadi Kebakaran!", "Suhu Melebihi Batas", "suhu");
-                            writeNotif("Api Terdeteksi", flame, lpg, suhu);
+                            writeNotif("Suhu Melebihi Batas", flame, lpg, suhu);
                         }
                         suhuAlarm = true;
 
@@ -154,16 +155,17 @@ public class HomeActivity extends AppCompatActivity {
                         suhuAlarm = false;
                     }
 
-//                    if(condition != lastCondition && condition != "safe"){
-//                        Notifikasi(HomeActivity.this, "Terjadi Kebakaran!", msg, condition);
-//                    }
-
+                    if(!fireAlarm && !suhuAlarm && !lpgAlarm){
+                        tvStatus.setText("Kondisi Aman");
+                    }else{
+                        tvStatus.setText("Terjadi Kebakaran!");
+                    }
 
 
                     if(flame == 1){
-                        tvFlame.setText("Flame: Api Terdeteksi" );
+                        tvFlame.setText("Api Terdeteksi" );
                     }else{
-                        tvFlame.setText("Flame: Tidak Ada Api" );
+                        tvFlame.setText("Tidak Ada Api" );
                     }
 
                     // Set nilai ke TextView
@@ -171,7 +173,6 @@ public class HomeActivity extends AppCompatActivity {
                     tvLpg.setText("LPG: " + lpg);
                     tvSuhu.setText("Suhu: " + suhu + " °C");
 
-//                    lastCondition = condition;
                 }
             }
 
