@@ -1,7 +1,9 @@
 package com.example.firealert;
 
 public class NotificationItem {
-    private String time, status, api, suhu, asap;
+    public String time, status, api, suhu, asap;
+
+    public NotificationItem(){}
 
     public NotificationItem(String time, String status, String api, String suhu, String asap) {
         this.time = time;

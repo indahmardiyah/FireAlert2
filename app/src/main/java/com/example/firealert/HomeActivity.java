@@ -4,9 +4,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -15,6 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import android.content.pm.PackageManager;
 
 import com.google.firebase.database.DataSnapshot;
@@ -26,6 +30,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -34,6 +39,17 @@ public class HomeActivity extends AppCompatActivity {
     private Runnable updateTimeRunnable;
 
     private static final String CHANNEL_ID = "my_channel_id";
+    private static final String CHANNEL_NAME = "my_channel_name";
+
+
+    boolean fireAlarm = false;
+
+    boolean lpgAlarm = false;
+    
+    boolean suhuAlarm = false;
+
+    String currentDateTime;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +66,9 @@ public class HomeActivity extends AppCompatActivity {
         updateTimeRunnable = new Runnable() {
             @Override
             public void run() {
-                String currentDateTime = new SimpleDateFormat("EEEE, dd MMMM yyyy\nhh:mm:ss a", Locale.getDefault()).format(new Date());
+                currentDateTime = new SimpleDateFormat("EEEE, dd MMMM yyyy\nhh:mm:ss a", Locale.getDefault()).format(new Date());
                 tvDateTime.setText(currentDateTime);
+//                Notifikasi(HomeActivity.this,"Terjadi Kebakaran", "Api Terdeteksi", "flame");
                 handler.postDelayed(this, 1000); // Perbarui setiap detik
             }
         };
@@ -59,6 +76,8 @@ public class HomeActivity extends AppCompatActivity {
 
         // Ambil data sensor dari Firebase
         fetchSensorData();
+
+
 
         // Tombol Riwayat Notifikasi
         Button btnNotificationHistory = findViewById(R.id.btnNotificationHistory);
@@ -96,20 +115,50 @@ public class HomeActivity extends AppCompatActivity {
                     int flame = dataSnapshot.child("flame").getValue(Integer.class);
                     double lpg = dataSnapshot.child("lpg").getValue(Double.class);
                     double suhu = dataSnapshot.child("suhu").getValue(Double.class);
-                    String timestamp = dataSnapshot.child("timestamp").getValue(String.class);
-
-
 
                     if(flame == 1){
 
-                        showNotification("Terjadi Kebakaran!", "Api Terdeteksi");
-                    }else if(lpg >= 50.0){
+                        if(fireAlarm == false){
+                            Notifikasi(HomeActivity.this,"Terjadi Kebakaran!", "Api Terdeteksi", "flame");
+                            writeNotif("Api Terdeteksi", flame, lpg, suhu);
+                        }
+                        fireAlarm = true;
+                        Log.d("FLAME", "Api");
+//
 
-                        showNotification("Terjadi Kebakaran!", "Kadar Gas Melebihi Batas");
-                    }else if(suhu >= 42.0){
-
-                        showNotification("Terjadi Kebakaran!", "Suhu Melebihi Batas");
+                    }else{
+                        fireAlarm = false;
                     }
+                    if(lpg >= 50.0){
+                        Log.d("LPG", "Gas");
+
+                        if(lpgAlarm == false){
+                            Notifikasi(HomeActivity.this,"Terjadi Kebakaran!", "Kadar Gas Melebihi Batas", "lpg");
+                            writeNotif("Api Terdeteksi", flame, lpg, suhu);
+                        }
+                        lpgAlarm = true;
+
+                    }else{
+                        lpgAlarm = false;
+                    }
+
+                    if(suhu >= 42.0){
+                        Log.d("SUHU", "Suhu");
+                        if(suhuAlarm == false){
+                            Notifikasi(HomeActivity.this, "Terjadi Kebakaran!", "Suhu Melebihi Batas", "suhu");
+                            writeNotif("Api Terdeteksi", flame, lpg, suhu);
+                        }
+                        suhuAlarm = true;
+
+                    }else{
+                        suhuAlarm = false;
+                    }
+
+//                    if(condition != lastCondition && condition != "safe"){
+//                        Notifikasi(HomeActivity.this, "Terjadi Kebakaran!", msg, condition);
+//                    }
+
+
 
                     if(flame == 1){
                         tvFlame.setText("Flame: Api Terdeteksi" );
@@ -121,6 +170,8 @@ public class HomeActivity extends AppCompatActivity {
 
                     tvLpg.setText("LPG: " + lpg);
                     tvSuhu.setText("Suhu: " + suhu + " °C");
+
+//                    lastCondition = condition;
                 }
             }
 
@@ -134,44 +185,79 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "My Channel";
-            String description = "Channel untuk notifikasi sederhana";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
 
-            // Daftarkan channel ke sistem
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
+    public void Notifikasi(Context context, String title, String content, String kondisi) {
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Handle permission
-            return;
-        }
 
-    }
 
-    private void showNotification(String title, String content) {
-        createNotificationChannel();
+        // Tampilkan notifikasi
+        // Membuat notifikasi baru
+        Notif newNotification = new Notif(title, content);
+        newNotification.setMessage(content);
+        newNotification.setId(System.currentTimeMillis());  // Simpan waktu sekarang
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(HomeActivity.this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_dialog_info) // Icon bawaan Android
-                .setContentTitle(title)
+
+
+        // Tampilkan notifikasi
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle(title) // Gunakan kondisi sebagai judul notifikasi
                 .setContentText(content)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+            channel.enableLights(true);
+            channel.setLightColor(Color.RED);
+            channel.enableVibration(true);
+            builder.setChannelId(CHANNEL_ID);
+            notificationManager.createNotificationChannel(channel);
+
+        }
 
         // Tampilkan notifikasi
-        notificationManager.notify(1, builder.build());
+        if (ActivityCompat.checkSelfPermission(HomeActivity.this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Handle permission
+            return;
+        }
+        Log.d("NOTIF", "ON");
+        notificationManager.notify(getNotificationId(kondisi), builder.build());
+
+        // Simpan waktu terakhir notifikasi ditampilkan ke Firebase Database
+
+
+    }
+
+
+    private int getNotificationId(String kondisi) {
+        switch (kondisi) {
+            case "suhu":
+                return 1;
+            case "flame":
+                return 2;
+            case "lpg":
+                return 3;
+            default:
+                return 0; // Atur sesuai kebutuhan, pastikan semua ID notifikasi berbeda
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacks(updateTimeRunnable);
+    }
+
+    private void writeNotif(String message, long flame, double lpg, double suhu){
+        DatabaseReference notifRef = FirebaseDatabase.getInstance().getReference("notifikasi");
+        String notifKey = notifRef.push().getKey();
+        notifRef.child(notifKey).child("time").setValue(currentDateTime);
+        notifRef.child(notifKey).child("api").setValue(String.valueOf(flame));
+        notifRef.child(notifKey).child("suhu").setValue(String.valueOf(suhu));
+        notifRef.child(notifKey).child("asap").setValue(String.valueOf(lpg));
+        notifRef.child(notifKey).child("status").setValue(String.valueOf(message));
     }
 }
