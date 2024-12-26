@@ -106,7 +106,7 @@ public class HomeActivity extends AppCompatActivity {
 
     // Fungsi untuk mengambil data sensor dari Firebase
     private void fetchSensorData() {
-        DatabaseReference sensorsRef = FirebaseDatabase.getInstance().getReference("sensors").child("-OEh1BMjMp-WvVPltf7r");
+        DatabaseReference sensorsRef = FirebaseDatabase.getInstance().getReference("sensors").child("-OEnVfTt23-cM71d8RJd");
 
         sensorsRef.addValueEventListener(new ValueEventListener() {
             @Override
