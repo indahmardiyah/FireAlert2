@@ -10,8 +10,8 @@
 #include <WiFiClientSecure.h>
 
 // Konfigurasi WiFi
-const char* WIFI_SSID = "Mardiyah";         // Ganti dengan SSID WiFi Anda
-const char* WIFI_PASSWORD = "usmanisah";  // Ganti dengan password WiFi Anda
+const char* WIFI_SSID = "Mardiyah";       
+const char* WIFI_PASSWORD = "usmanisah";  
 
 #define DATABASE_URL "https://firealert-3280e-default-rtdb.firebaseio.com/"
 
